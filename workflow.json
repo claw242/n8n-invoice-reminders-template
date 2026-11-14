@@ -1,0 +1,418 @@
+{
+  "name": "Overdue invoice reminders (3 levels, drafts only)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "### How it works\nThis workflow helps freelancers and small teams chase unpaid invoices politely. Every weekday at 9:00 it reads an invoice sheet, picks the invoices due for a reminder (by default 7, 21 and 35 days after the due date) and creates one Gmail draft per invoice. It sends nothing by itself. Paid invoices are skipped, only one level is produced at a time, and the sheet is updated after each draft so the next run continues with the next level. If that write-back fails (permissions, quota, connection), the next run can draft the same reminder again, so check the sheet after each run. A second branch lists every skipped invoice with its reason.\n\n### Setup\n1. Click Execute workflow: it runs on 9 fictional invoices and touches none of your accounts (the \"today\" setting is fixed to 2026-11-05).\n2. Create a Google Sheet with these headers: invoice_number, client_name, client_email, amount, due_date, status, paid_date, reminder_level, last_reminder_date.\n3. In Settings, set source to sheets, empty today, and fill in your name, currency and payment details.\n4. Enable the three grey nodes (read sheet, Gmail draft, record reminder) and choose your own Google credentials and sheet.\n\nTested in n8n 2.14.2 with sample data; the Google nodes were not run against real accounts.\n\n### Customization\nEdit schedule_days (three increasing numbers) or the wording in the reminderText function of the Code node. Adapt the last-level sentence to your own payment terms. If the sheet update fails after a draft is created, the next run drafts that level again: delete the extra draft.\n\nBuilt with AI assistance by Loupe & Lettres (AI assistant).",
+        "height": 640,
+        "width": 560,
+        "color": 4
+      },
+      "id": "7c1a986e-9eff-4588-a605-ad6c6ba2108a",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -340,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Settings and test data\nChoose sample or sheets, the reminder days, your name and payment details. With source = sample no account is touched.",
+        "height": 400,
+        "width": 680,
+        "color": 7
+      },
+      "id": "7ce6c562-ad72-4263-a647-cc111d49a932",
+      "name": "Section 1 - Settings and test data",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        130
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Decide who gets a reminder\nOne Code node holds every rule. A second one lists skipped invoices with the reason, so nothing is ignored silently.",
+        "height": 400,
+        "width": 480,
+        "color": 7
+      },
+      "id": "5b4e3ff8-ea60-4ddf-ab17-934be36bef9f",
+      "name": "Section 2 - Decide who gets a reminder",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        960,
+        130
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Draft and record\nCreates one Gmail draft per reminder, then writes the new level and date back to the sheet.",
+        "height": 260,
+        "width": 480,
+        "color": 7
+      },
+      "id": "579ffb19-2ab8-478e-a4b7-655fb89ce9c6",
+      "name": "Section 3 - Draft and record",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        130
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "dd68934f-baa7-4d4b-add5-5d35cd334d23",
+      "name": "Run test",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        300,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1-5"
+            }
+          ]
+        }
+      },
+      "id": "07c6b74c-13ec-48f8-a7a5-dbaef09ef0c2",
+      "name": "Every weekday at 9:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        300,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "174ba2dd-a668-4f80-a698-c1de89e3f56d",
+              "name": "source",
+              "value": "sample",
+              "type": "string"
+            },
+            {
+              "id": "2e340d13-c688-41b4-a76e-a19d41796a32",
+              "name": "today",
+              "value": "2026-11-05",
+              "type": "string"
+            },
+            {
+              "id": "3d6f8b0d-0fa4-429a-a8a6-821107a43e07",
+              "name": "schedule_days",
+              "value": "7,21,35",
+              "type": "string"
+            },
+            {
+              "id": "01bdb105-0daf-4c4a-a873-0612b259b910",
+              "name": "currency",
+              "value": "EUR",
+              "type": "string"
+            },
+            {
+              "id": "ff2ad417-47fd-4158-ac7a-4b8849aa0b8a",
+              "name": "sender_name",
+              "value": "Your name",
+              "type": "string"
+            },
+            {
+              "id": "38c3abb6-6480-4ed9-a2e6-04b3cf7aab73",
+              "name": "payment_details",
+              "value": "Add your bank details or payment link here",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "fb6ad67f-1e44-460f-a3f3-7a0b7404da04",
+      "name": "Settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        540,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0fa49d0b-f7c4-41c2-a5a3-ce3622c885d7",
+              "leftValue": "={{ $json.source }}",
+              "rightValue": "sample",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "24623c9f-7e94-40dd-a028-b8c2c8aa42d7",
+      "name": "Use sample data?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        780,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Fictional invoices (reserved example.com addresses) - replace by your sheet with source = sheets.\nconst rows = [\n  { invoice_number: 'INV-020', client_name: 'Client A', client_email: 'client-a@example.com', amount: '300.00', due_date: '2026-10-20', status: 'Sent', paid_date: '', reminder_level: '0', last_reminder_date: '' },\n  { invoice_number: 'INV-021', client_name: 'Client B', client_email: 'client-b@example.com', amount: '1,200.00', due_date: '2026-10-10', status: 'Sent', paid_date: '', reminder_level: '1', last_reminder_date: '2026-10-20' },\n  { invoice_number: 'INV-022', client_name: 'Client C', client_email: 'client-c@example.com', amount: '90.00', due_date: '2026-09-15', status: 'Paid', paid_date: '', reminder_level: '0', last_reminder_date: '' },\n  { invoice_number: 'INV-023', client_name: 'Client D', client_email: 'client-d@example.com', amount: '450.00', due_date: '2026-09-20', status: 'Sent', paid_date: '2026-10-02', reminder_level: '0', last_reminder_date: '' },\n  { invoice_number: 'INV-024', client_name: 'Client E', client_email: 'client-e@example.com', amount: '700.00', due_date: '2026-08-01', status: 'Sent', paid_date: '', reminder_level: '3', last_reminder_date: '2026-09-10' },\n  { invoice_number: 'INV-025', client_name: 'Client F', client_email: 'client-f@example.com', amount: '60.00', due_date: '2026-10-28', status: 'Sent', paid_date: '', reminder_level: '1', last_reminder_date: '2026-10-30' },\n  { invoice_number: 'INV-026', client_name: 'Client G', client_email: 'client-g@example.com', amount: '210.00', due_date: '2026-10-10', status: 'Sent', paid_date: '', reminder_level: '1', last_reminder_date: '2026-11-05' },\n  { invoice_number: 'INV-027', client_name: 'Client H', client_email: 'client-h@example.com', amount: '520.00', due_date: '2026-11-20', status: 'Sent', paid_date: '', reminder_level: '0', last_reminder_date: '' },\n  { invoice_number: 'INV-028', client_name: 'Client I', client_email: '', amount: '130.00', due_date: '2026-10-01', status: 'Sent', paid_date: '', reminder_level: '0', last_reminder_date: '' }\n];\nreturn rows.map((json) => ({ json }));"
+      },
+      "id": "2a1e6eaa-fe5d-437a-a7bd-c8b509fbdbfc",
+      "name": "Sample invoices",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1020,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "e4b83e39-60b7-425e-ad21-9b416e80b9df",
+      "name": "Read invoices (Google Sheets)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1020,
+        380
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loupe & Lettres (AI assistant) - built with AI assistance\n// Overdue-invoice reminders: fixed schedule, paid invoices ignored, one level at a time, a level already recorded in the sheet is not drafted again.\n\nvar ALIASES = {\n  invoice_number: ['invoice_number', 'invoice', 'invoice_no', 'number', 'no'],\n  client_name: ['client_name', 'client', 'customer', 'name'],\n  client_email: ['client_email', 'email', 'e-mail', 'customer_email'],\n  amount: ['amount', 'total', 'amount_due'],\n  due_date: ['due_date', 'due', 'date_due'],\n  status: ['status', 'state'],\n  paid_date: ['paid_date', 'paid_on', 'payment_date'],\n  reminder_level: ['reminder_level', 'reminders_sent', 'level'],\n  last_reminder_date: ['last_reminder_date', 'last_reminder', 'reminded_on']\n};\nvar PAID_STATUSES = ['paid', 'settled', 'closed', 'cancelled', 'canceled', 'void'];\n\nfunction norm(s) { return String(s === undefined || s === null ? '' : s).trim().toLowerCase().replace(/\\s+/g, '_'); }\n\nfunction readField(row, field) {\n  var wanted = ALIASES[field];\n  for (var key in row) { if (wanted.indexOf(norm(key)) >= 0) return row[key]; }\n  return undefined;\n}\n\nfunction two(n) { return (n < 10 ? '0' : '') + n; }\n\n// Accepts YYYY-MM-DD or DD/MM/YYYY (day first); anything else is \"unreadable\" (null).\nfunction parseDate(v) {\n  var s = String(v === undefined || v === null ? '' : v).trim();\n  var m = s.match(/^(\\d{4})-(\\d{2})-(\\d{2})/);\n  var y, mo, d;\n  if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; }\n  else {\n    m = s.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);\n    if (!m) return null;\n    d = +m[1]; mo = +m[2]; y = +m[3];\n  }\n  var t = new Date(Date.UTC(y, mo - 1, d));\n  if (t.getUTCFullYear() !== y || t.getUTCMonth() !== mo - 1 || t.getUTCDate() !== d) return null;\n  return y + '-' + two(mo) + '-' + two(d);\n}\n\nfunction dayNumber(iso) {\n  var m = iso.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);\n  return Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000);\n}\n\nfunction addDays(iso, days) {\n  var m = iso.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);\n  var t = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3] + days));\n  return t.getUTCFullYear() + '-' + two(t.getUTCMonth() + 1) + '-' + two(t.getUTCDate());\n}\n\n// \"1,200.50\", \"1 200,50\", \"1200\", \"120 EUR\", \"$99\", 1200 -> number, otherwise null.\n// The WHOLE text must be one amount (optional currency at either end): \"100-200\" or \"100 EUR (VAT 20%)\" are refused.\nvar CURRENCY = '(?:\\\\u20ac|\\\\$|\\\\u00a3|eur|euros?|usd|gbp|chf|cad)';\nvar AMOUNT_FORMS = [\n  /^-?\\d+(?:[.,]\\d+)?$/,\n  /^-?\\d{1,3}(?:,\\d{3})+(?:\\.\\d+)?$/,\n  /^-?\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?$/,\n  /^-?\\d{1,3}(?:[ \\u00a0\\u202f]\\d{3})+(?:[.,]\\d+)?$/\n];\nfunction parseAmount(v) {\n  if (typeof v === 'number') return isFinite(v) ? v : null;\n  var s = String(v === undefined || v === null ? '' : v).trim()\n    .replace(new RegExp('^' + CURRENCY + '\\\\s*', 'i'), '')\n    .replace(new RegExp('\\\\s*' + CURRENCY + '$', 'i'), '').trim();\n  if (!AMOUNT_FORMS.some(function (re) { return re.test(s); })) return null;\n  s = s.replace(/[ \\u00a0\\u202f]/g, '');\n  var lastComma = s.lastIndexOf(','), lastDot = s.lastIndexOf('.');\n  if (lastComma >= 0 && lastDot >= 0) {\n    s = lastComma > lastDot ? s.replace(/\\./g, '').replace(',', '.') : s.replace(/,/g, '');\n  } else if (lastComma >= 0) {\n    s = /,\\d{1,2}$/.test(s) ? s.replace(',', '.') : s.replace(/,/g, '');\n  }\n  var n = parseFloat(s);\n  return isFinite(n) ? n : null;\n}\n\nfunction parseSchedule(text) {\n  var raw = text === undefined || text === null || text === '' ? '7,21,35' : text;\n  var d = String(raw).split(/[,;\\s]+/).map(function (x) { return parseInt(x, 10); });\n  if (d.length !== 3 || d.some(function (x) { return !(x >= 0 && x < 1000); }) || !(d[0] < d[1] && d[1] < d[2])) {\n    throw new Error('Invalid schedule: write three increasing numbers of days, for example 7,21,35.');\n  }\n  return d;\n}\n\nfunction todayIso(cfg) {\n  if (cfg && cfg.today) {\n    var d = parseDate(cfg.today);\n    if (!d) throw new Error('Setting \"today\" is unreadable: use YYYY-MM-DD or leave it empty.');\n    return d;\n  }\n  var n = new Date();\n  return n.getUTCFullYear() + '-' + two(n.getUTCMonth() + 1) + '-' + two(n.getUTCDate());\n}\n\nfunction money(amount, currency) {\n  var cur = currency || 'EUR';\n  return amount.toFixed(2).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',') + ' ' + cur;\n}\n\nfunction reminderText(level, inv, cfg) {\n  var sign = cfg && cfg.sender_name ? String(cfg.sender_name).trim() : '';\n  var pay = cfg && cfg.payment_details ? '\\n\\nHow to pay: ' + cfg.payment_details : '';\n  var ref = 'invoice ' + inv.number + ' (' + money(inv.amount, cfg && cfg.currency) + ', due ' + inv.due_date + ')';\n  var close = function (word) { return word + (sign ? ',\\n' + sign : ''); };\n  if (level === 1) {\n    return {\n      subject: 'Friendly reminder: invoice ' + inv.number + ' is now due',\n      body: 'Hello,\\n\\nOur records show that ' + ref + ' has not been paid yet (' + inv.days_late + ' days late). It may simply have slipped through; if you have already paid, please ignore this message.' + pay + '\\n\\n' + close('Kind regards')\n    };\n  }\n  if (level === 2) {\n    return {\n      subject: 'Second reminder: invoice ' + inv.number + ' is ' + inv.days_late + ' days late',\n      body: 'Hello,\\n\\nFurther to my previous reminder, ' + ref + ' is still unpaid (' + inv.days_late + ' days late). Could you confirm the payment date?' + pay + '\\n\\n' + close('Kind regards')\n    };\n  }\n  return {\n    subject: 'Final reminder: invoice ' + inv.number,\n    body: 'Hello,\\n\\nDespite two earlier reminders, ' + ref + ' remains unpaid (' + inv.days_late + ' days late). Unless I receive payment shortly, I will have to apply the late-payment terms of our agreement (adapt this sentence to your own terms).' + pay + '\\n\\n' + close('Regards')\n  };\n}\n\n// rows: array of objects (sheet rows). Returns { to_send[], skipped[], today }.\nfunction pickReminders(rows, cfg) {\n  var schedule = parseSchedule(cfg && cfg.schedule_days);\n  var today = todayIso(cfg);\n  var todayNum = dayNumber(today);\n  var toSend = [], skipped = [], seen = {};\n  rows.forEach(function (r) {\n    var n = readField(r, 'invoice_number');\n    if (n !== undefined && String(n).trim() !== '') { var k = String(n).trim().toLowerCase(); seen[k] = (seen[k] || 0) + 1; }\n  });\n  rows.forEach(function (r, idx) {\n    var raw = readField(r, 'invoice_number');\n    var number = String(raw === undefined || String(raw).trim() === '' ? 'row ' + (idx + 2) : raw).trim();\n    function skip(reason) { skipped.push({ invoice_number: number, reason: reason }); }\n    var status = norm(readField(r, 'status'));\n    var paidOn = String(readField(r, 'paid_date') === undefined ? '' : readField(r, 'paid_date')).trim();\n    if (PAID_STATUSES.indexOf(status) >= 0 || paidOn !== '') return skip('already paid or closed');\n    if ((seen[number.toLowerCase()] || 0) > 1) return skip('duplicate invoice number (' + seen[number.toLowerCase()] + ' rows): fix before any reminder');\n    var due = parseDate(readField(r, 'due_date'));\n    var amount = parseAmount(readField(r, 'amount'));\n    var email = String(readField(r, 'client_email') === undefined ? '' : readField(r, 'client_email')).trim();\n    if (!due) return skip('due date unreadable');\n    if (amount === null || amount <= 0) return skip('amount unreadable');\n    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return skip('client e-mail missing or invalid');\n    var level = parseInt(readField(r, 'reminder_level'), 10) || 0;\n    if (level >= 3) return skip('all 3 reminders already sent: handle manually');\n    var last = parseDate(readField(r, 'last_reminder_date'));\n    if (last === today) return skip('already reminded today');\n    var late = todayNum - dayNumber(due);\n    var dueLevel = 0;\n    for (var i = 0; i < 3; i++) if (late >= schedule[i]) dueLevel = i + 1;\n    if (dueLevel <= level) {\n      return skip(late < 0 ? 'not due yet' : 'reminder ' + (level + 1) + ' planned for ' + addDays(due, schedule[level]));\n    }\n    var next = level + 1; // one level at a time, even if several are overdue\n    var inv = { number: number, amount: amount, due_date: due, days_late: late };\n    var t = reminderText(next, inv, cfg);\n    toSend.push({\n      invoice_number: number,\n      client_name: String(readField(r, 'client_name') || '').trim(),\n      to: email,\n      subject: t.subject,\n      body: t.body,\n      reminder_level: next,\n      last_reminder_date: today,\n      days_late: late\n    });\n  });\n  return { to_send: toSend, skipped: skipped, today: today };\n}\n\n\n// ---- n8n wiring ----\nconst settings = $('Settings').first().json;\nconst rows = $input.all().map((i) => i.json);\nif (rows.length && rows[0].schedule_days !== undefined && rows[0].source !== undefined) {\n  throw new Error('No invoice received: enable and configure the \"Read invoices (Google Sheets)\" node, or set source = sample.');\n}\nconst r = pickReminders(rows, settings);\n// Nothing due: no output, so no draft and no sheet update (see the skipped-invoices report).\nreturn r.to_send.map((x) => ({ json: x }));"
+      },
+      "id": "7eb76df9-309c-4acd-af8f-65536e5f5058",
+      "name": "Pick reminders due",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loupe & Lettres (AI assistant) - built with AI assistance\n// Overdue-invoice reminders: fixed schedule, paid invoices ignored, one level at a time, a level already recorded in the sheet is not drafted again.\n\nvar ALIASES = {\n  invoice_number: ['invoice_number', 'invoice', 'invoice_no', 'number', 'no'],\n  client_name: ['client_name', 'client', 'customer', 'name'],\n  client_email: ['client_email', 'email', 'e-mail', 'customer_email'],\n  amount: ['amount', 'total', 'amount_due'],\n  due_date: ['due_date', 'due', 'date_due'],\n  status: ['status', 'state'],\n  paid_date: ['paid_date', 'paid_on', 'payment_date'],\n  reminder_level: ['reminder_level', 'reminders_sent', 'level'],\n  last_reminder_date: ['last_reminder_date', 'last_reminder', 'reminded_on']\n};\nvar PAID_STATUSES = ['paid', 'settled', 'closed', 'cancelled', 'canceled', 'void'];\n\nfunction norm(s) { return String(s === undefined || s === null ? '' : s).trim().toLowerCase().replace(/\\s+/g, '_'); }\n\nfunction readField(row, field) {\n  var wanted = ALIASES[field];\n  for (var key in row) { if (wanted.indexOf(norm(key)) >= 0) return row[key]; }\n  return undefined;\n}\n\nfunction two(n) { return (n < 10 ? '0' : '') + n; }\n\n// Accepts YYYY-MM-DD or DD/MM/YYYY (day first); anything else is \"unreadable\" (null).\nfunction parseDate(v) {\n  var s = String(v === undefined || v === null ? '' : v).trim();\n  var m = s.match(/^(\\d{4})-(\\d{2})-(\\d{2})/);\n  var y, mo, d;\n  if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; }\n  else {\n    m = s.match(/^(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})$/);\n    if (!m) return null;\n    d = +m[1]; mo = +m[2]; y = +m[3];\n  }\n  var t = new Date(Date.UTC(y, mo - 1, d));\n  if (t.getUTCFullYear() !== y || t.getUTCMonth() !== mo - 1 || t.getUTCDate() !== d) return null;\n  return y + '-' + two(mo) + '-' + two(d);\n}\n\nfunction dayNumber(iso) {\n  var m = iso.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);\n  return Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / 86400000);\n}\n\nfunction addDays(iso, days) {\n  var m = iso.match(/^(\\d{4})-(\\d{2})-(\\d{2})$/);\n  var t = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3] + days));\n  return t.getUTCFullYear() + '-' + two(t.getUTCMonth() + 1) + '-' + two(t.getUTCDate());\n}\n\n// \"1,200.50\", \"1 200,50\", \"1200\", \"120 EUR\", \"$99\", 1200 -> number, otherwise null.\n// The WHOLE text must be one amount (optional currency at either end): \"100-200\" or \"100 EUR (VAT 20%)\" are refused.\nvar CURRENCY = '(?:\\\\u20ac|\\\\$|\\\\u00a3|eur|euros?|usd|gbp|chf|cad)';\nvar AMOUNT_FORMS = [\n  /^-?\\d+(?:[.,]\\d+)?$/,\n  /^-?\\d{1,3}(?:,\\d{3})+(?:\\.\\d+)?$/,\n  /^-?\\d{1,3}(?:\\.\\d{3})+(?:,\\d+)?$/,\n  /^-?\\d{1,3}(?:[ \\u00a0\\u202f]\\d{3})+(?:[.,]\\d+)?$/\n];\nfunction parseAmount(v) {\n  if (typeof v === 'number') return isFinite(v) ? v : null;\n  var s = String(v === undefined || v === null ? '' : v).trim()\n    .replace(new RegExp('^' + CURRENCY + '\\\\s*', 'i'), '')\n    .replace(new RegExp('\\\\s*' + CURRENCY + '$', 'i'), '').trim();\n  if (!AMOUNT_FORMS.some(function (re) { return re.test(s); })) return null;\n  s = s.replace(/[ \\u00a0\\u202f]/g, '');\n  var lastComma = s.lastIndexOf(','), lastDot = s.lastIndexOf('.');\n  if (lastComma >= 0 && lastDot >= 0) {\n    s = lastComma > lastDot ? s.replace(/\\./g, '').replace(',', '.') : s.replace(/,/g, '');\n  } else if (lastComma >= 0) {\n    s = /,\\d{1,2}$/.test(s) ? s.replace(',', '.') : s.replace(/,/g, '');\n  }\n  var n = parseFloat(s);\n  return isFinite(n) ? n : null;\n}\n\nfunction parseSchedule(text) {\n  var raw = text === undefined || text === null || text === '' ? '7,21,35' : text;\n  var d = String(raw).split(/[,;\\s]+/).map(function (x) { return parseInt(x, 10); });\n  if (d.length !== 3 || d.some(function (x) { return !(x >= 0 && x < 1000); }) || !(d[0] < d[1] && d[1] < d[2])) {\n    throw new Error('Invalid schedule: write three increasing numbers of days, for example 7,21,35.');\n  }\n  return d;\n}\n\nfunction todayIso(cfg) {\n  if (cfg && cfg.today) {\n    var d = parseDate(cfg.today);\n    if (!d) throw new Error('Setting \"today\" is unreadable: use YYYY-MM-DD or leave it empty.');\n    return d;\n  }\n  var n = new Date();\n  return n.getUTCFullYear() + '-' + two(n.getUTCMonth() + 1) + '-' + two(n.getUTCDate());\n}\n\nfunction money(amount, currency) {\n  var cur = currency || 'EUR';\n  return amount.toFixed(2).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ',') + ' ' + cur;\n}\n\nfunction reminderText(level, inv, cfg) {\n  var sign = cfg && cfg.sender_name ? String(cfg.sender_name).trim() : '';\n  var pay = cfg && cfg.payment_details ? '\\n\\nHow to pay: ' + cfg.payment_details : '';\n  var ref = 'invoice ' + inv.number + ' (' + money(inv.amount, cfg && cfg.currency) + ', due ' + inv.due_date + ')';\n  var close = function (word) { return word + (sign ? ',\\n' + sign : ''); };\n  if (level === 1) {\n    return {\n      subject: 'Friendly reminder: invoice ' + inv.number + ' is now due',\n      body: 'Hello,\\n\\nOur records show that ' + ref + ' has not been paid yet (' + inv.days_late + ' days late). It may simply have slipped through; if you have already paid, please ignore this message.' + pay + '\\n\\n' + close('Kind regards')\n    };\n  }\n  if (level === 2) {\n    return {\n      subject: 'Second reminder: invoice ' + inv.number + ' is ' + inv.days_late + ' days late',\n      body: 'Hello,\\n\\nFurther to my previous reminder, ' + ref + ' is still unpaid (' + inv.days_late + ' days late). Could you confirm the payment date?' + pay + '\\n\\n' + close('Kind regards')\n    };\n  }\n  return {\n    subject: 'Final reminder: invoice ' + inv.number,\n    body: 'Hello,\\n\\nDespite two earlier reminders, ' + ref + ' remains unpaid (' + inv.days_late + ' days late). Unless I receive payment shortly, I will have to apply the late-payment terms of our agreement (adapt this sentence to your own terms).' + pay + '\\n\\n' + close('Regards')\n  };\n}\n\n// rows: array of objects (sheet rows). Returns { to_send[], skipped[], today }.\nfunction pickReminders(rows, cfg) {\n  var schedule = parseSchedule(cfg && cfg.schedule_days);\n  var today = todayIso(cfg);\n  var todayNum = dayNumber(today);\n  var toSend = [], skipped = [], seen = {};\n  rows.forEach(function (r) {\n    var n = readField(r, 'invoice_number');\n    if (n !== undefined && String(n).trim() !== '') { var k = String(n).trim().toLowerCase(); seen[k] = (seen[k] || 0) + 1; }\n  });\n  rows.forEach(function (r, idx) {\n    var raw = readField(r, 'invoice_number');\n    var number = String(raw === undefined || String(raw).trim() === '' ? 'row ' + (idx + 2) : raw).trim();\n    function skip(reason) { skipped.push({ invoice_number: number, reason: reason }); }\n    var status = norm(readField(r, 'status'));\n    var paidOn = String(readField(r, 'paid_date') === undefined ? '' : readField(r, 'paid_date')).trim();\n    if (PAID_STATUSES.indexOf(status) >= 0 || paidOn !== '') return skip('already paid or closed');\n    if ((seen[number.toLowerCase()] || 0) > 1) return skip('duplicate invoice number (' + seen[number.toLowerCase()] + ' rows): fix before any reminder');\n    var due = parseDate(readField(r, 'due_date'));\n    var amount = parseAmount(readField(r, 'amount'));\n    var email = String(readField(r, 'client_email') === undefined ? '' : readField(r, 'client_email')).trim();\n    if (!due) return skip('due date unreadable');\n    if (amount === null || amount <= 0) return skip('amount unreadable');\n    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return skip('client e-mail missing or invalid');\n    var level = parseInt(readField(r, 'reminder_level'), 10) || 0;\n    if (level >= 3) return skip('all 3 reminders already sent: handle manually');\n    var last = parseDate(readField(r, 'last_reminder_date'));\n    if (last === today) return skip('already reminded today');\n    var late = todayNum - dayNumber(due);\n    var dueLevel = 0;\n    for (var i = 0; i < 3; i++) if (late >= schedule[i]) dueLevel = i + 1;\n    if (dueLevel <= level) {\n      return skip(late < 0 ? 'not due yet' : 'reminder ' + (level + 1) + ' planned for ' + addDays(due, schedule[level]));\n    }\n    var next = level + 1; // one level at a time, even if several are overdue\n    var inv = { number: number, amount: amount, due_date: due, days_late: late };\n    var t = reminderText(next, inv, cfg);\n    toSend.push({\n      invoice_number: number,\n      client_name: String(readField(r, 'client_name') || '').trim(),\n      to: email,\n      subject: t.subject,\n      body: t.body,\n      reminder_level: next,\n      last_reminder_date: today,\n      days_late: late\n    });\n  });\n  return { to_send: toSend, skipped: skipped, today: today };\n}\n\n\n// ---- n8n wiring ----\nconst settings = $('Settings').first().json;\nconst rows = $input.all().map((i) => i.json);\nif (rows.length && rows[0].schedule_days !== undefined && rows[0].source !== undefined) return [];\nreturn pickReminders(rows, settings).skipped.map((x) => ({ json: x }));"
+      },
+      "id": "392de5ee-8106-4feb-aced-0bf828310aaf",
+      "name": "Report: skipped invoices",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "draft",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.body }}",
+        "options": {
+          "sendTo": "={{ $json.to }}"
+        }
+      },
+      "id": "8dda50ce-9f01-4a6b-ac4f-78fb78b23ada",
+      "name": "Create Gmail draft",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1580,
+        200
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "invoice_number": "={{ $('Pick reminders due').item.json.invoice_number }}",
+            "reminder_level": "={{ $('Pick reminders due').item.json.reminder_level }}",
+            "last_reminder_date": "={{ $('Pick reminders due').item.json.last_reminder_date }}"
+          },
+          "matchingColumns": [
+            "invoice_number"
+          ],
+          "schema": []
+        },
+        "options": {}
+      },
+      "id": "0d278a43-f6c4-4349-a7e5-f0469d28b821",
+      "name": "Record reminder in Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1860,
+        200
+      ],
+      "disabled": true
+    }
+  ],
+  "connections": {
+    "Run test": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Every weekday at 9:00": {
+      "main": [
+        [
+          {
+            "node": "Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Settings": {
+      "main": [
+        [
+          {
+            "node": "Use sample data?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Use sample data?": {
+      "main": [
+        [
+          {
+            "node": "Sample invoices",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Read invoices (Google Sheets)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sample invoices": {
+      "main": [
+        [
+          {
+            "node": "Pick reminders due",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report: skipped invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read invoices (Google Sheets)": {
+      "main": [
+        [
+          {
+            "node": "Pick reminders due",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Report: skipped invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick reminders due": {
+      "main": [
+        [
+          {
+            "node": "Create Gmail draft",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Gmail draft": {
+      "main": [
+        [
+          {
+            "node": "Record reminder in Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": []
+}
